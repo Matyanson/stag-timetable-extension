@@ -1,5 +1,5 @@
 {
-  "name": "sveltekit-extension",
+  "name": "stag-timetable-manager",
   "version": "0.0.1",
   "scripts": {
     "dev:extension": "nodemon --watch src --watch static --ext .* --exec \"npm run build & npx tsc --project tsconfig.extension.json\"",
