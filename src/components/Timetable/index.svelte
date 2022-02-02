@@ -9,7 +9,7 @@
 
     $: grid_columns = getGridColumns(template)
 
-    let editIndex = template.length - 1;
+    let editIndex = edit ? template.length - 1 : -1;
 
     const getGridColumns = (t: Timetable) => {
         const lengths = t.map(x => x[1] - x[0]);

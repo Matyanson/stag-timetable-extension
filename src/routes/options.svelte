@@ -6,4 +6,4 @@
 
 </script>
 <h1>Options Page</h1>
-<Timetable bind:template={timetable_template} edit={true} />
+<Timetable bind:template={timetable_template} />
