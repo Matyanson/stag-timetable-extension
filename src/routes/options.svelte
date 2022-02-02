@@ -2,6 +2,8 @@
     import default_timetable from "../assets/default_timetable";
     import Timetable from "../components/Timetable/index.svelte";
 
+    let timetable_template = default_timetable;
+
 </script>
 <h1>Options Page</h1>
-<Timetable template={default_timetable} />
+<Timetable bind:template={timetable_template} edit={true} />

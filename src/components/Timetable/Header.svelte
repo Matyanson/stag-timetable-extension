@@ -2,6 +2,7 @@
     import type Timetable from "../../models/timetable";
 
     export let template: Timetable;
+    export let editIndex: number = -1;
 
     const minutesToTime = (mins: number) => {
         const hours = Math.floor(mins / 60);
@@ -13,7 +14,7 @@
 
 <div class="cell header"></div>
 {#each template as lesson, i}
-<div class="cell header">
+<div class="cell header" class:edit={editIndex == i} on:click={() => editIndex = i}>
     <div class="number">{i}</div>
     <div class="time">
         {minutesToTime(lesson[0])}<br>
@@ -32,6 +33,9 @@
         flex-flow: row wrap;
         text-align: center;
         background-color: #8e8eff;
+    }
+    .header.edit {
+        border: 2px solid red;
     }
     .number {
         font-size: 1.5rem;
