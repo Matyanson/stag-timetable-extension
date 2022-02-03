@@ -1,19 +1,19 @@
 <script lang="ts">
-
-    let url = "";
+import type Subject from "../models/Subject";
+import { subjects } from "../store";
 
     async function fetchSubjects() {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         chrome.tabs.sendMessage(tab.id, {action: 'fetch_subjects', data: null}, (res) => {
-            if (!chrome.runtime.lastError) {
-                // if you have any response
-                console.log('I have a response!');
-                console.log(res);
-            } else {
-                console.log('there is an error');
+            if (!chrome.runtime.lastError)
+                processSubjects(res);
+            else
                 console.log(chrome.runtime.lastError);
-            }
         });
+        const processSubjects = (newSubjects: Subject[]) => {
+            if(newSubjects && newSubjects.length > 0)
+                $subjects = newSubjects;
+        }
     }
 </script>
 <div id="popup-window" style="width: 400px;height: 500px">
