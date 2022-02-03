@@ -1,10 +1,13 @@
 <script lang="ts">
+import type { SubjectEvent } from "src/models/Plan";
+
     import type Timetable from "../../models/Timetable";
     import Body from "./Body.svelte";
     import Header from "./Header.svelte";
     import SettingsBar from "./SettingsBar.svelte";
 
     export let template: Timetable;
+    export let events: SubjectEvent[] = [];
     export let edit = false;
 
     $: grid_columns = getGridColumns(template)
@@ -27,7 +30,7 @@
         <!-- Header -->
         <Header bind:template bind:editIndex />
         <!-- Rows -->
-        <Body bind:template />
+        <Body template={template} bind:events on:click />
     </div>
 </div>
 

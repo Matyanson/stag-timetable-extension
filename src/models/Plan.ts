@@ -1,7 +1,7 @@
 import type Subject from "./Subject";
 import type Timetable from "./Timetable";
 
-export type Event = {
+export type SubjectEvent = {
     subject: Subject,
     day: number,
     time: number
@@ -9,7 +9,7 @@ export type Event = {
 
 type Plan = {
     timetable: Timetable,
-    events: Event[]
+    events: SubjectEvent[]
 }
 
 export default Plan;
