@@ -1,4 +1,4 @@
-import type Timetable from "../models/timetable";
+import type Timetable from "../models/Timetable";
 
 export default [
     [445, 490],

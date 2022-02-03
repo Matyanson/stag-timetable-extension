@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type Timetable from "../../models/timetable";
+    import type Timetable from "../../models/Timetable";
 
     export let template: Timetable;
     export let editIndex: number;

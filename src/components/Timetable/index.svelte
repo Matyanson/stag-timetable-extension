@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type Timetable from "../../models/timetable";
+    import type Timetable from "../../models/Timetable";
     import Body from "./Body.svelte";
     import Header from "./Header.svelte";
     import SettingsBar from "./SettingsBar.svelte";
