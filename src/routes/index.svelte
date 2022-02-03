@@ -1,17 +1,23 @@
 <script lang="ts">
+
     let url = "";
 
-    async function getUrl() {
+    async function fetchSubjects() {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        url = tab.url;
+        chrome.tabs.sendMessage(tab.id, {action: 'fetch_subjects', data: null}, (res) => {
+            if (!chrome.runtime.lastError) {
+                // if you have any response
+                console.log('I have a response!');
+                console.log(res);
+            } else {
+                console.log('there is an error');
+                console.log(chrome.runtime.lastError);
+            }
+        });
     }
 </script>
 <div id="popup-window" style="width: 400px;height: 500px">
-    <button on:click={getUrl}>Reveal Current URL</button>
-
-    <div>The current URL is: {url}</div>
-
-    <p>note: run the "dev:extension" script for hot reloading.</p>
+    <button on:click={fetchSubjects}>Fetch the subjects</button>
 </div>
 
 <style>
