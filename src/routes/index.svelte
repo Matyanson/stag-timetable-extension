@@ -1,10 +1,13 @@
 <script lang="ts">
 import type Subject from "../models/Subject";
-import { subjects } from "../store";
+import { appSettings, subjects } from "../store";
 
     async function fetchSubjects() {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        chrome.tabs.sendMessage(tab.id, {action: 'fetch_subjects', data: null}, (res) => {
+        const data = {
+            settings: $appSettings
+        }
+        chrome.tabs.sendMessage(tab.id, { action: 'fetch_subjects', data }, (res) => {
             if (!chrome.runtime.lastError)
                 processSubjects(res);
             else

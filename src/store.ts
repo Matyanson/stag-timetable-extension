@@ -21,3 +21,13 @@ export const subjects = wStorage<Subject[]>('subjects', []);
 export const timetables = wStorage<{title: string, data: Timetable}[]>('timetable_templates', []);
 
 export const plans = wStorage<{title: string, data: Plan}[]>('plans', []);
+
+export const appSettings = wStorage('app_settings', {
+    subjects_by_year_selectors: [
+        '#struktura table.vsp_pane_zahlavi_opened_coat #rocnik_1 .gpv-pred',
+        '#struktura table.vsp_pane_zahlavi_opened_coat #rocnik_2 .gpv-pred',
+        '#struktura table.vsp_pane_zahlavi_opened_coat #rocnik_3 .gpv-pred',
+        '#struktura table.vsp_pane_zahlavi_opened_coat #rocnik_4 .gpv-pred',
+    ],
+    subject_text_filter : '\d$'
+})
