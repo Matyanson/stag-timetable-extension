@@ -6,7 +6,6 @@ import { createEventDispatcher } from "svelte";
 
     export let template: Timetable;
     export let events: SubjectEvent[];
-    export let edit = false;
     const rows = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
     
     const dispatch = createEventDispatcher();
@@ -44,30 +43,23 @@ import { createEventDispatcher } from "svelte";
         const res = events.filter((ev) => !(ev.day == day && ev.time == time));
         events = res;
     }
-    const addSubject = (day: number, time: number) => {
-
-    }
 </script>
 
 {#each data as day, d}
 <div class="cell even label">{day.label}</div>
 {#each day.cells as cellData, i}
-    {#if cellData?.subject}
-    <div class="cell data" class:even={i%2==1} class:edit>
+    <div class="cell data" class:even={i%2==1} on:click={() => dispatch('click', {day: d, time: i})}>
+        {#if cellData?.subject}
         <div class="event">
             {cellData.subject.title}
-            <button on:click={() => deleteSubject(d, i)}>delete</button>
         </div>
+        {/if}
     </div>
-    {:else}
-    <div class="cell data" class:even={i%2==1} on:click={() => dispatch('click', {day: d, time: i})}>
-    </div>
-    {/if}
     {/each}
 {/each}
 
 <style>
-    .data.edit {
+    .data {
         cursor: pointer;
     }
     .data:hover {
@@ -86,11 +78,5 @@ import { createEventDispatcher } from "svelte";
         padding: 3px;
         background: green;
         color: whitesmoke;
-    }
-    .event button {
-        display: none;
-    }
-    .edit .event button {
-        display: block;
     }
 </style>
