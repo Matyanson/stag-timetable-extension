@@ -1,7 +1,7 @@
 <script lang="ts">
     import { timetables } from "../store";
     import Button from "./Button.svelte";
-    import CrudItem from "./Timetable/CRUDItem.svelte";
+    import CrudItem from "./CRUDItem.svelte";
     import Timetable from './Timetable/index.svelte';
     import Window from "./Window.svelte";
     import default_timetable from '../assets/default_timetable';
@@ -47,7 +47,7 @@
 <Window bind:isOpen={windowOpened} title={`editing: ${$timetables[selected].title}`}>
     <h1>{$timetables[selected].title}</h1>
     title: <input type="text" bind:value={$timetables[selected].title} />
-    <Timetable edit={true} template={$timetables[selected].data}/>
+    <Timetable edit={true} bind:template={$timetables[selected].data}/>
 </Window>
 {/if}
 
