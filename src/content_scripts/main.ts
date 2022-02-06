@@ -1,5 +1,9 @@
-import { clearInnerText, normalizeText } from '../helper';
+import type { SubjectTime } from '../models/Timetable';
+import { clearInnerText, normalizeText, timeToMinutes } from '../helper';
 import type Subject from '../models/Subject';
+import type Plan from '../models/Plan';
+import type { SubjectEvent } from '../models/Plan';
+import type Timetable from '../models/Timetable';
 
 const fetchSubjects = (settings): Subject[] => {
     const selectors = settings.subjects_by_year_selectors;
@@ -18,6 +22,137 @@ const fetchSubjects = (settings): Subject[] => {
         }
     }
     return subjects;
+}
+
+type SubjectCell = {
+    subjectId: string,
+    time: SubjectTime,
+    elementRef: HTMLElement
+}
+type SubjectsPlan = SubjectCell[][];
+type SubjectQueue = {
+    id: string,
+    selected: boolean,
+    events: SubjectEvent[]
+}[]
+
+
+
+const onLoad = () => {
+    if(localStorage == null) return;
+    const storedQueue = localStorage.getItem('subject_queue');
+    if(storedQueue == null) return;
+    const queue: SubjectQueue = JSON.parse(storedQueue);
+    if(queue[0] == null) {console.log('queue is empty!'); return};
+
+    const currSubject = queue[0];
+    const settings = JSON.parse(localStorage.getItem('stag_manager_settings'));
+
+    if(!currSubject.selected) {
+        //save selected ahead of time
+        queue[0].selected = true;
+        localStorage.setItem('subject_queue', JSON.stringify(queue));
+        //select the subject
+        const gotSelected = selectSubject(currSubject.events[0].subject, settings);
+        if(!gotSelected) {
+            //delete the subject from the queue
+            console.log(`couldn't select subject: ${currSubject.events[0].subject.title}`);
+            queue.shift();
+            localStorage.setItem('subject_queue', JSON.stringify(queue));
+            location.reload();
+            return;
+        }
+    } else {
+        //select subject events on the timetable
+        const timetable: Timetable = JSON.parse(localStorage.getItem('timetable_template'));
+        for(const event of currSubject.events) {
+            const times = timetable[event.time];
+            const stagSubjectEvents = getSubjectsFormated(settings);
+
+            const filteredSubjects = stagSubjectEvents[event.day]?.filter((subj) => {
+                let maxA = Math.max(subj.time[0], times[0]);
+                let minB = Math.min(subj.time[1], times[1]);
+                let diff = minB - maxA;
+                return diff > (times[1] - times[0]) / 2
+                    || (subj.time[0] > times[0] && subj.time[1] < times[1])
+            })
+
+            for(let subj of filteredSubjects) {
+                if(subj.subjectId.includes(event.subject.id)) {
+                    const selectBtn: HTMLElement = getSubjectButtonElement(subj.elementRef, settings);
+                    selectBtn?.click();
+                }
+            }
+        }
+        //remove from queue
+        queue.shift();
+        localStorage.setItem('subject_queue', JSON.stringify(queue));
+        //save progress
+        const saveBtn: HTMLElement = document.querySelector(settings.confirm_button_selector);
+        saveBtn?.click();
+    }
+}
+
+
+const enroll = (plan: Plan, settings) => {
+    console.log('enroll', settings, plan);
+    //const subjectsPlan = getSubjectsFormated(settings);
+    
+    //const res = selectSubject(plan.events[0].subject, settings);
+
+    //group events by the subject id
+    const groupByKey: {[key: string]: SubjectEvent[]} = {};
+    for(let event of plan.events) {
+        if(groupByKey[event.subject.id] == null)
+            groupByKey[event.subject.id] = [event];
+        else
+            groupByKey[event.subject.id].push(event);
+    }
+    //create a queue for the subjects
+    const subjectQueue: SubjectQueue = [];
+    for(const [key, value] of Object.entries(groupByKey)) {
+        subjectQueue.push({
+            id: key,
+            selected: false,
+            events: value
+        })
+    }
+
+    if(localStorage){
+        //save the queue
+        localStorage.setItem('subject_queue', JSON.stringify(subjectQueue));
+        //save the timetable in the plan
+        localStorage.setItem('timetable_template', JSON.stringify(plan.timetable));
+        //save the settings
+        localStorage.setItem('stag_manager_settings', JSON.stringify(settings));
+
+        location.reload();
+    }
+}
+
+const selectSubject = (subject: Subject, settings) => {
+    const selectors = settings.subjects_by_year_selectors;
+    const mergeSelectors = settings.subjects_by_year_selectors.join(', ');
+
+    const firstList = Array.from(document.querySelectorAll(selectors[subject.year - 1]));
+    const allSubjectsList = Array.from(document.querySelectorAll(mergeSelectors));
+    const subjectList: HTMLElement[] = firstList.concat(allSubjectsList);
+    const matchingSubjectList = subjectList.filter((el) => {
+        const text = normalizeText(clearInnerText(el.innerText));
+        return text.includes(subject.id);
+    })
+
+    for(let el of matchingSubjectList) {
+        const clickableArea: HTMLElement = el.querySelector('td, *');
+        clickableArea.click();
+        const selectBtn: HTMLElement = document.querySelector(settings.subject_select_button_selector);
+        //select subject if possible
+        if(selectBtn) {
+            selectBtn.click();
+            return true;
+        }
+    }
+    return false;
 }
 
 const getSubjectsFormated = (settings): SubjectsPlan => {
@@ -68,11 +203,11 @@ const getSubjectsFormated = (settings): SubjectsPlan => {
     return res;
 }
 
-const getSubjectTitleElement = (cell: HTMLTableCellElement, settings) => {
+const getSubjectTitleElement = (cell: HTMLElement, settings) => {
     const title: HTMLElement = cell.querySelector(settings.cell_subject_title_selector);
     return title;
 }
-const getSubjectButtonElement = (cell: HTMLTableCellElement, settings) => {
+const getSubjectButtonElement = (cell: HTMLElement, settings) => {
     const button = cell.querySelector(settings.cell_subject_button_selector);
     return button;
 }
@@ -121,12 +256,19 @@ const getTableTimes = (table: HTMLElement) => {
     return res;
 }
 
+
+onLoad();
+
 chrome.runtime.onMessage.addListener((msg, s, sendResponse) => {
     console.log(msg);
     switch(msg.action) {
         case 'fetch_subjects':
             const res = fetchSubjects(msg.data.settings);
             sendResponse(res);
+            break;
+        case 'enroll_in_subjects':
+            enroll(msg.data.plan, msg.data.settings);
+            sendResponse('good');
             break;
     }
 })

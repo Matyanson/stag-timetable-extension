@@ -1,6 +1,8 @@
 <script lang="ts">
-import type Subject from "../models/Subject";
-import { appSettings, subjects } from "../store";
+    import type Subject from "../models/Subject";
+    import { appSettings, plans, subjects } from "../store";
+
+    let planIndex = 0;
 
     async function fetchSubjects() {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -18,9 +20,33 @@ import { appSettings, subjects } from "../store";
                 $subjects = newSubjects;
         }
     }
+    async function enroll() {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        const data = {
+            settings: $appSettings,
+            plan: $plans[planIndex]?.data
+        }
+        chrome.tabs.sendMessage(tab.id, { action: 'enroll_in_subjects', data }, (res) => {
+            if (!chrome.runtime.lastError)
+                console.log('succes');
+            else
+                console.log(chrome.runtime.lastError);
+        });
+    }
 </script>
+
 <div id="popup-window" style="width: 400px;height: 500px">
-    <button on:click={fetchSubjects}>Fetch the subjects</button>
+    <button on:click={fetchSubjects}>Fetch the subjects</button><br><br>
+    Select a plan:
+    <select bind:value={planIndex} >
+        {#each $plans as plan, i}
+            <option value={i}>
+                {plan.title}
+            </option>
+        {/each}
+    </select><br>
+    <button on:click={enroll}>enroll in subjects</button>
+
 </div>
 
 <style>
