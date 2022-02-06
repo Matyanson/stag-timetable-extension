@@ -29,5 +29,11 @@ export const appSettings = wStorage('app_settings', {
         '#struktura table.vsp_pane_zahlavi_opened_coat #rocnik_3 .gpv-pred',
         '#struktura table.vsp_pane_zahlavi_opened_coat #rocnik_4 .gpv-pred',
     ],
-    subject_text_filter : '\d$'
+    subject_text_filter : '\\d$',
+    subject_select_button_selector: '.ui-tooltip-content input[value="Vybrat"]',
+    confirm_button_selector: '.gpv-gpredzform-longer',
+    timetable_selector: '.gpv_rozvrhMainTable',
+    cell_subject_title_selector: '.gpv_rozvrh_roak_main',
+    cell_subject_button_selector: '.gpv-RA-veVyberu'
+
 })
