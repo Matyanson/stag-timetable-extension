@@ -24,9 +24,9 @@
         display: flex;
         flex-flow: column;
         margin: 10px;
-        padding: 5px;
+        padding: 10px;
         width: fit-content;
-        background: #9b9bff;
+        background: #4b4bcb;
         border-radius: 5px;
     }
     .title {

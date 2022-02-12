@@ -38,11 +38,6 @@ import { createEventDispatcher } from "svelte";
         }
         return res;
     }
-
-    const deleteSubject = (day: number, time: number) => {
-        const res = events.filter((ev) => !(ev.day == day && ev.time == time));
-        events = res;
-    }
 </script>
 
 {#each data as day, d}
@@ -70,6 +65,7 @@ import { createEventDispatcher } from "svelte";
     }
     .cell.label {
         padding: 5px;
+        color: black;
     }
     .cell.even {
         background-color: #cbcbff;

@@ -8,8 +8,6 @@
 </script>
 
 <main>
-    <h1>Options Page</h1>
-
     <h1>List of subjects</h1>
     <SubjectsContainer />
     
@@ -26,7 +24,8 @@
 
 <style>
     main {
-        margin: 10px;
-        margin-bottom: 200px;
+        padding: 50px;
+        background: #24274A;
+        color: white;
     }
 </style>

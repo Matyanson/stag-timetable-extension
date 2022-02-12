@@ -28,6 +28,7 @@
     padding: 5px;
     margin-bottom: 10px;
     background: #eee;
+    color: black;
 }
 .title {
     flex: 1;

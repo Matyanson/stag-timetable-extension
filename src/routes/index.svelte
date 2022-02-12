@@ -1,4 +1,6 @@
 <script lang="ts">
+    import Select from "../components/Select.svelte";
+    import Button from "../components/Button.svelte";
     import type Subject from "../models/Subject";
     import { appSettings, plans, subjects } from "../store";
 
@@ -35,29 +37,35 @@
     }
 </script>
 
-<div id="popup-window" style="width: 400px;height: 500px">
-    <button on:click={fetchSubjects}>Fetch the subjects</button><br><br>
-    Select a plan:
-    <select bind:value={planIndex} >
-        {#each $plans as plan, i}
-            <option value={i}>
-                {plan.title}
-            </option>
-        {/each}
-    </select><br>
-    <button on:click={enroll}>enroll in subjects</button>
-
+<div id="popup-window" style="width: 250px;height: 350px">
+    <main>
+        <Button bg={'#f18623'} on:click={fetchSubjects}>Fetch subjects</Button><br><br>
+        Select a plan:
+        <Select bind:value={planIndex} list={$plans} titleIndex={'title'} />
+        <Button bg={'#f18623'} on:click={enroll}>enroll in subjects</Button>
+    </main>
 </div>
 
 <style>
     #popup-window {
         box-sizing: border-box;
-        padding: 8px;
         max-width: 800px;
         max-height: 600px;
         min-width: 200px;
         min-height: 150px;
         resize: vertical;
         overflow: auto;
+    }
+    main {
+        box-sizing: border-box;
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+        padding: 20px;
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(#4242f0, #000081);
+        color: white;
+        font-size: 1.5rem;
     }
 </style>

@@ -60,4 +60,11 @@
         padding: 5px;
         border-bottom: 1px black solid;
     }
+    .key {
+        padding: 15px 5px;
+        font-size: 1rem;
+    }
+    .value {
+        width: 100%;
+    }
 </style>

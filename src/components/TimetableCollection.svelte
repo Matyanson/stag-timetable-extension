@@ -11,7 +11,7 @@
     
     const createNew = () => {
         timetables.update(old => {
-            return [...old, {title: "Detla lulw", data: default_timetable}];
+            return [...old, {title: "New Timetable", data: default_timetable}];
         })
         selected = $timetables.length -1;
     }
@@ -55,5 +55,6 @@
     .collection {
         display: flex;
         flex-flow: row wrap;
+        align-items: center;
     }
 </style>

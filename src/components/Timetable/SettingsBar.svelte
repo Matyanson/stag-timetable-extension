@@ -48,11 +48,14 @@
 
 <style>
     .settingsBar {
+        box-sizing: border-box;
         display: flex;
         flex-flow: row;
+        align-items: center;
         width: 100%;
-        height: 20px;
+        padding: 5px;
         background: #eeeeee;
+        color: black;
     }
     .modify {
         flex: 1;

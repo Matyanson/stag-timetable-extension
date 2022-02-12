@@ -50,7 +50,7 @@
 {#if $plans[selected]}
 <Window bind:isOpen={windowOpened} title="editing: {$plans[selected].title}">
     <h1>{$plans[selected].title}</h1>
-    title: <input type="text" bind:value={$plans[selected].title} />
+    <div class="title">Title: <input type="text" bind:value={$plans[selected].title} /></div>
     <PlanEditor 
         bind:timetableTemplate={$plans[selected].data.timetable}
         bind:subjectEvents={$plans[selected].data.events}
@@ -62,5 +62,9 @@
     .collection {
         display: flex;
         flex-flow: row wrap;
+        align-items: center;
+    }
+    .title {
+        font-size: 1.3rem;
     }
 </style>
