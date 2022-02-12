@@ -103,9 +103,6 @@ const onLoad = async () => {
 
 const enroll = (plan: Plan, settings) => {
     console.log('enroll', settings, plan);
-    //const subjectsPlan = getSubjectsFormated(settings);
-    
-    //const res = selectSubject(plan.events[0].subject, settings);
 
     //group events by the subject id
     const groupByKey: {[key: string]: SubjectEvent[]} = {};
