@@ -1,5 +1,5 @@
 import type { SubjectTime } from '../models/Timetable';
-import { clearInnerText, normalizeText, timeToMinutes } from '../helper';
+import { clearInnerText, normalizeText, sleep, timeToMinutes } from '../helper';
 import type Subject from '../models/Subject';
 import type Plan from '../models/Plan';
 import type { SubjectEvent } from '../models/Plan';
@@ -37,59 +37,66 @@ type SubjectQueue = {
 }[]
 
 
-
-const onLoad = () => {
+const onLoad = async () => {
     if(localStorage == null) return;
+    const settings = JSON.parse(localStorage.getItem('stag_manager_settings'));
     const storedQueue = localStorage.getItem('subject_queue');
-    if(storedQueue == null) return;
+    const timetable: Timetable = JSON.parse(localStorage.getItem('timetable_template'));
+    if(settings == null || storedQueue == null || timetable == null) return;
     const queue: SubjectQueue = JSON.parse(storedQueue);
     if(queue[0] == null) {console.log('queue is empty!'); return};
 
-    const currSubject = queue[0];
-    const settings = JSON.parse(localStorage.getItem('stag_manager_settings'));
-
-    if(!currSubject.selected) {
-        //save selected ahead of time
-        queue[0].selected = true;
-        localStorage.setItem('subject_queue', JSON.stringify(queue));
-        //select the subject
-        const gotSelected = selectSubject(currSubject.events[0].subject, settings);
-        if(!gotSelected) {
-            //delete the subject from the queue
-            console.log(`couldn't select subject: ${currSubject.events[0].subject.title}`);
-            queue.shift();
+    //select the subjects
+    for(let i in queue) {
+        if(!queue[i].selected){
+            //mark as selected
+            queue[i].selected = true;
             localStorage.setItem('subject_queue', JSON.stringify(queue));
-            location.reload();
-            return;
+            const gotSelected = selectSubject(queue[i].events[0].subject, settings);
+
+            if(!gotSelected) {
+                console.log(`couldn't select subject: ${queue[i].events[0].subject.title}`);
+            }
+            await sleep(500);
         }
-    } else {
-        //select subject events on the timetable
-        const timetable: Timetable = JSON.parse(localStorage.getItem('timetable_template'));
-        for(const event of currSubject.events) {
+    }
+
+    //enroll in subjects
+    const newQueue = queue.slice()
+    for(const currSubj of queue) {
+        //delete from queue
+        newQueue.shift();
+        localStorage.setItem('subject_queue', JSON.stringify(newQueue));
+
+        for(const event of currSubj.events) {
             const times = timetable[event.time];
             const stagSubjectEvents = getSubjectsFormated(settings);
 
-            const filteredSubjects = stagSubjectEvents[event.day]?.filter((subj) => {
-                let maxA = Math.max(subj.time[0], times[0]);
-                let minB = Math.min(subj.time[1], times[1]);
-                let diff = minB - maxA;
-                return diff > (times[1] - times[0]) / 2
-                    || (subj.time[0] > times[0] && subj.time[1] < times[1])
-            })
+            const filteredSubjects = stagSubjectEvents[event.day]?.filter((subj) => subjectsOverlap(subj.time, times));
+            if(!filteredSubjects) continue;
 
             for(let subj of filteredSubjects) {
-                if(subj.subjectId.includes(event.subject.id)) {
+                if(subj.elementRef.isConnected && subj.subjectId.includes(event.subject.id)) {
+                    console.log(subj.subjectId, subj.elementRef);
                     const selectBtn: HTMLElement = getSubjectButtonElement(subj.elementRef, settings);
-                    selectBtn?.click();
+                    if(selectBtn){
+                        selectBtn?.click();
+                        await sleep(200);
+                    }
                 }
             }
         }
-        //remove from queue
-        queue.shift();
-        localStorage.setItem('subject_queue', JSON.stringify(queue));
-        //save progress
-        const saveBtn: HTMLElement = document.querySelector(settings.confirm_button_selector);
-        saveBtn?.click();
+    }
+
+    save(settings);
+
+    function subjectsOverlap(timeA: SubjectTime, timeB: SubjectTime) {
+        let maxA = Math.max(timeA[0], timeB[0]);
+        let minB = Math.min(timeA[1], timeB[1]);
+        let diff = minB - maxA;
+        let length1 = timeB[1] - timeB[0];
+        let length2 = timeA[1] - timeA[0];
+        return diff > Math.min(length1, length2) / 2;
     }
 }
 
@@ -126,7 +133,7 @@ const enroll = (plan: Plan, settings) => {
         //save the settings
         localStorage.setItem('stag_manager_settings', JSON.stringify(settings));
 
-        location.reload();
+        onLoad();
     }
 }
 
@@ -201,6 +208,11 @@ const getSubjectsFormated = (settings): SubjectsPlan => {
         }
     }
     return res;
+}
+
+const save = (settings) => {
+    const saveBtn: HTMLElement = document.querySelector(settings.confirm_button_selector);
+    saveBtn?.click();
 }
 
 const getSubjectTitleElement = (cell: HTMLElement, settings) => {

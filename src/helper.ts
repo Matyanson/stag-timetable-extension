@@ -10,3 +10,5 @@ export const timeToMinutes = (time: string) => {
     const [hours, minutes] = time.split(':');
     return Number(hours) * 60 + Number(minutes);
 }
+
+export const sleep = ms => new Promise(r => setTimeout(r, ms));
