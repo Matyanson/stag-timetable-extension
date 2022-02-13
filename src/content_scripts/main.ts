@@ -4,6 +4,7 @@ import type Subject from '../models/Subject';
 import type Plan from '../models/Plan';
 import type { SubjectEvent } from '../models/Plan';
 import type Timetable from '../models/Timetable';
+import type Message from '../models/Message';
 
 const fetchSubjects = (settings): Subject[] => {
     const selectors = settings.subjects_by_year_selectors;
@@ -44,7 +45,7 @@ const onLoad = async () => {
     const timetable: Timetable = JSON.parse(localStorage.getItem('timetable_template'));
     if(settings == null || storedQueue == null || timetable == null) return;
     const queue: SubjectQueue = JSON.parse(storedQueue);
-    if(queue[0] == null) {console.log('queue is empty!'); return};
+    if(queue[0] == null) {sendMessage('info', 'reached end of the task'); return};
 
     //select the subjects
     for(let i in queue) {
@@ -55,7 +56,7 @@ const onLoad = async () => {
             const gotSelected = selectSubject(queue[i].events[0].subject, settings);
 
             if(!gotSelected) {
-                console.log(`couldn't select subject: ${queue[i].events[0].subject.title}`);
+                sendMessage('error' ,`couldn't select subject: ${queue[i].events[0].subject.title}`);
             }
             await sleep(500);
         }
@@ -73,14 +74,16 @@ const onLoad = async () => {
             const stagSubjectEvents = getSubjectsFormated(settings);
 
             const filteredSubjects = stagSubjectEvents[event.day]?.filter((subj) => subjectsOverlap(subj.time, times));
-            if(!filteredSubjects) continue;
+            if(!filteredSubjects || filteredSubjects.length < 1) {
+                sendMessage('error', `subject not found in the timetable: ${event.subject.title}`);
+                continue;
+            };
 
             for(let subj of filteredSubjects) {
                 if(subj.elementRef.isConnected && subj.subjectId.includes(event.subject.id)) {
-                    console.log(subj.subjectId, subj.elementRef);
                     const selectBtn: HTMLElement = getSubjectButtonElement(subj.elementRef, settings);
-                    if(selectBtn){
-                        selectBtn?.click();
+                    if(selectBtn && selectBtn.isConnected){
+                        selectBtn.click();
                         await sleep(200);
                     }
                 }
@@ -102,7 +105,7 @@ const onLoad = async () => {
 
 
 const enroll = (plan: Plan, settings) => {
-    console.log('enroll', settings, plan);
+    sendMessage('info', 'start of the task');
 
     //group events by the subject id
     const groupByKey: {[key: string]: SubjectEvent[]} = {};
@@ -265,11 +268,14 @@ const getTableTimes = (table: HTMLElement) => {
     return res;
 }
 
+const sendMessage = (type: Message["type"], text: string) => {
+    const message = {type, text};
+    chrome.runtime.sendMessage({type: 'new_message', data: message});
+}
 
 onLoad();
 
 chrome.runtime.onMessage.addListener((msg, s, sendResponse) => {
-    console.log(msg);
     switch(msg.action) {
         case 'fetch_subjects':
             const res = fetchSubjects(msg.data.settings);
