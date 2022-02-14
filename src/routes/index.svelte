@@ -6,6 +6,7 @@
     import { onMount } from "svelte";
     import type Message from "../models/Message";
     import Messages from "../components/Messages.svelte";
+    import Settings from "../assets/icons/Settings.svelte";
 
     let planIndex = 0;
     let messages: Message[] = [];
@@ -50,6 +51,10 @@
         });
     }
 
+    function openOptions() {
+        chrome.runtime.openOptionsPage();
+    }
+
     onMount(() => {
         chrome.runtime.onMessage.addListener((msg) => {
             const data = msg.data;
@@ -63,7 +68,7 @@
     
 </script>
 
-<div id="popup-window" style="width: 270px;height: 350px">
+<div id="popup-window" style="width: 270px;height: 400px">
     <main>
         <Button bg={'#f18623'} on:click={fetchSubjects}>Fetch subjects</Button><br><br>
         Select a plan:
@@ -72,6 +77,7 @@
 
         <br>Log:<br>
         <Messages messages={messages} />
+        <div id="options-button" on:click={openOptions}><Settings /></div>
     </main>
 </div>
 
@@ -97,5 +103,15 @@
         width: 100%;
         color: white;
         font-size: 1.5rem;
+    }
+    #options-button {
+        position: fixed;
+        top: 13px;
+        right: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    #options-button:hover {
+        color: #e07f00;
     }
 </style>
