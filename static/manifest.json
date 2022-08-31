@@ -15,7 +15,10 @@
       "js": ["content_scripts/main.js"]
     }
   ],
-  "permissions": [ "activeTab" ],
+  "permissions": [ 
+    "activeTab",
+    "storage"
+  ],
   "icons": {
     "48": "favicon.png"
   }

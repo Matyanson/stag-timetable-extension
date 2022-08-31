@@ -7,9 +7,10 @@
     import type Message from "../models/Message";
     import Messages from "../components/Messages.svelte";
     import Settings from "../assets/icons/Settings.svelte";
+    import { wStorage } from "../writable-stores";
 
     let planIndex = 0;
-    let messages: Message[] = [];
+    let messages = wStorage<Message[]>('system_messages', []);
 
     $:{
         messages;
@@ -18,6 +19,16 @@
             setTimeout(() => win.scrollTo(0, win.scrollHeight), 200);
         }
     }
+    onMount(() => {
+        chrome.runtime.onMessage.addListener((msg) => {
+            const data: Message = msg.data;
+            switch(msg.type) {
+                case 'new_message':
+                    $messages = [...$messages, data];
+                    break;
+            }
+        })
+    })
 
     async function fetchSubjects() {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -27,8 +38,10 @@
         chrome.tabs.sendMessage(tab.id, { action: 'fetch_subjects', data }, (res) => {
             if (!chrome.runtime.lastError)
                 processSubjects(res);
-            else
-                messages.push({type: 'error', text: chrome.runtime.lastError.message});
+            else{
+                $messages = [...$messages, {type: 'error', text: chrome.runtime.lastError.message + 'frompopup'}];
+            }
+                
         });
         const processSubjects = (newSubjects: Subject[]) => {
             if(newSubjects && newSubjects.length > 0)
@@ -36,7 +49,7 @@
         }
     }
     async function enroll() {
-        messages = [];
+        $messages = [];
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         const data = {
             settings: $appSettings,
@@ -46,7 +59,7 @@
             if (!chrome.runtime.lastError)
                 console.log('succes');
             else{
-                messages.push({type: 'error', text: chrome.runtime.lastError.message});
+                $messages = [...$messages, {type: 'error', text: chrome.runtime.lastError.message + 'frompopup'}];
             }
         });
     }
@@ -54,17 +67,6 @@
     function openOptions() {
         chrome.runtime.openOptionsPage();
     }
-
-    onMount(() => {
-        chrome.runtime.onMessage.addListener((msg) => {
-            const data = msg.data;
-            switch(msg.type) {
-                case 'new_message':
-                    messages = [...messages, data];
-                    break;
-            }
-        })
-    })
     
 </script>
 
@@ -76,7 +78,7 @@
         <Button bg={'#f18623'} on:click={enroll}>enroll in subjects</Button>
 
         <br>Log:<br>
-        <Messages messages={messages} />
+        <Messages messages={$messages} />
         <div id="options-button" on:click={openOptions}><Settings /></div>
     </main>
 </div>
