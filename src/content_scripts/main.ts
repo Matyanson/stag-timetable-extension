@@ -41,11 +41,10 @@ type SubjectQueue = {
 const onLoad = async () => {
     if(localStorage == null) return;
     const settings = JSON.parse(localStorage.getItem('stag_manager_settings'));
-    const storedQueue = localStorage.getItem('subject_queue');
+    const queue: SubjectQueue = JSON.parse(localStorage.getItem('subject_queue'));
     const timetable: Timetable = JSON.parse(localStorage.getItem('timetable_template'));
-    if(settings == null || storedQueue == null || timetable == null) return;
-    const queue: SubjectQueue = JSON.parse(storedQueue);
-    if(queue[0] == null) {sendMessage('info', 'reached end of the task'); return};
+    if(settings == null || queue == null || timetable == null) {sendMessage('error', 'could not load subject queue, timetable or settings'); return }
+    if(queue[0] == null) {sendMessage('info', 'reached end of the queue'); return }
 
     //select the subjects
     for(let i in queue) {
@@ -55,8 +54,10 @@ const onLoad = async () => {
             localStorage.setItem('subject_queue', JSON.stringify(queue));
             const gotSelected = selectSubject(queue[i].events[0].subject, settings);
 
-            if(!gotSelected) {
-                sendMessage('error' ,`couldn't select subject: ${queue[i].events[0].subject.title}`);
+            if(gotSelected) {
+                sendMessage('succes' ,`selected subject (for enrollment): ${queue[i].events[0].subject.title}`);
+            } else {
+                sendMessage('error' ,`failed to select subject (for enrollment): ${queue[i].events[0].subject.title}`);
             }
             await sleep(500);
         }
@@ -75,7 +76,7 @@ const onLoad = async () => {
 
             const filteredSubjects = stagSubjectEvents[event.day]?.filter((subj) => subjectsOverlap(subj.time, times));
             if(!filteredSubjects || filteredSubjects.length < 1) {
-                sendMessage('error', `subject not found in the timetable: ${event.subject.title}`);
+                sendMessage('error', `subject ${event.subject.title} not found in the timetable at this time: day(${event.day}), minutes(${times[0]} - ${times[1]})`);
                 continue;
             };
 
@@ -84,14 +85,17 @@ const onLoad = async () => {
                     const selectBtn: HTMLElement = getSubjectButtonElement(subj.elementRef, settings);
                     if(selectBtn && selectBtn.isConnected){
                         selectBtn.click();
+                        sendMessage('succes', `enrolled subject ${event.subject.title}`);
                         await sleep(200);
+                    } else {
+                        sendMessage('error', `failed to enroll subject ${event.subject.title}, time: day(${event.day}), minutes(${times[0]} - ${times[1]})`);
                     }
                 }
             }
         }
     }
 
-    save(settings);
+    confirmEnrollment(settings);
 
     function subjectsOverlap(timeA: SubjectTime, timeB: SubjectTime) {
         let maxA = Math.max(timeA[0], timeB[0]);
@@ -105,7 +109,11 @@ const onLoad = async () => {
 
 
 const enroll = (plan: Plan, settings) => {
-    sendMessage('info', 'start of the task');
+    if(!plan?.events || !plan?.timetable) {
+        sendMessage('error', 'invalid plan');
+        return;
+    }
+    sendMessage('info', 'starting to enroll');
 
     //group events by the subject id
     const groupByKey: {[key: string]: SubjectEvent[]} = {};
@@ -133,25 +141,26 @@ const enroll = (plan: Plan, settings) => {
         //save the settings
         localStorage.setItem('stag_manager_settings', JSON.stringify(settings));
 
+        sendMessage('info', 'subject queue saved...');
         onLoad();
     }
 }
 
 const selectSubject = (subject: Subject, settings) => {
-    const selectors = settings.subjects_by_year_selectors;
-    const mergeSelectors = settings.subjects_by_year_selectors.join(', ');
+    const selectors: string[] = settings.subjects_by_year_selectors;
+    const mergedSelectors = selectors.join(', ');
 
-    const firstList = Array.from(document.querySelectorAll(selectors[subject.year - 1]));
-    const allSubjectsList = Array.from(document.querySelectorAll(mergeSelectors));
-    const subjectList: HTMLElement[] = firstList.concat(allSubjectsList);
-    const matchingSubjectList = subjectList.filter((el) => {
+    const firstList: HTMLElement[] = Array.from(document.querySelectorAll(selectors[subject.year - 1]));
+    let allSubjectsList: HTMLElement[] = Array.from(document.querySelectorAll(mergedSelectors));
+    allSubjectsList = firstList.concat(allSubjectsList);
+    const matchingSubjectList = allSubjectsList.filter((el) => {
         const text = normalizeText(clearInnerText(el.innerText));
         return text.includes(subject.id);
     })
 
     for(let el of matchingSubjectList) {
         const clickableArea: HTMLElement = el.querySelector('td, *');
-        clickableArea.click();
+        clickableArea?.click();
         const selectBtn: HTMLElement = document.querySelector(settings.subject_select_button_selector);
         //select subject if possible
         if(selectBtn) {
@@ -210,9 +219,14 @@ const getSubjectsFormated = (settings): SubjectsPlan => {
     return res;
 }
 
-const save = (settings) => {
-    const saveBtn: HTMLElement = document.querySelector(settings.confirm_button_selector);
-    saveBtn?.click();
+const confirmEnrollment = (settings) => {
+    try {
+        const saveBtn: HTMLElement = document.querySelector(settings.confirm_button_selector);
+        saveBtn.click();
+        sendMessage('succes', 'confirmed the enrollment');
+    } catch(e) {
+        sendMessage('error', 'failed to confirm the enrollment');
+    }
 }
 
 const getSubjectTitleElement = (cell: HTMLElement, settings) => {
