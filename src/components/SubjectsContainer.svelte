@@ -5,17 +5,16 @@ import { subjects } from "../store";
 
     export let selected: Subject = null;
 
-    const groupByYear = () => {
+    const groupByYear = (subjectList: Subject[]) => {
         const res: {[key: number]: Subject[]} = {};
-        for( let sbj of ($subjects as Subject[])) {
+        for( let sbj of subjectList) {
             if(!res.hasOwnProperty(sbj.year)) res[sbj.year] = [sbj];
             else res[sbj.year].push(sbj);
         }
         return res;
     }
 
-    const groupedSubjects = groupByYear();
-
+    $: groupedSubjects = groupByYear($subjects);
     
 </script>
 

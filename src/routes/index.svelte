@@ -31,6 +31,7 @@
     })
 
     async function fetchSubjects() {
+        $messages = [];
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         const data = {
             settings: $appSettings
@@ -44,8 +45,10 @@
                 
         });
         const processSubjects = (newSubjects: Subject[]) => {
-            if(newSubjects && newSubjects.length > 0)
+            if(newSubjects && newSubjects.length > 0) {
                 $subjects = newSubjects;
+                $messages = [...$messages, {type: 'succes', text: 'subjects fetched succesfully'}]
+            }
         }
     }
     async function enroll() {
