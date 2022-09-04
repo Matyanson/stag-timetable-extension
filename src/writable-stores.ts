@@ -1,4 +1,5 @@
 import { Writable, writable } from "svelte/store";
+import { object_equals } from "./helper";
 
 export const wStorage = <T>(key: string, initValue: T): Writable<T> => {
     const store = writable(initValue);
@@ -14,16 +15,38 @@ export const wStorage = <T>(key: string, initValue: T): Writable<T> => {
 }
 
 export const wSync = <T>(key: string, initValue: T): Writable<T> => {
-    const store = writable(initValue);
-    if (typeof chrome === 'undefined') return store;
 
-    (async ()=>{
-        const valueMap = await chrome.storage.sync.get(key);
-        if (valueMap.key != null) store.set(valueMap.key);
-    })();
+    if (typeof chrome === 'undefined') {
+        return writable(initValue);;
+    }
+    
+    const { set, update, subscribe } = writable<T>(initValue);
+    let firedFirst = false;
 
-    store.subscribe((val) => {
-        chrome.storage.sync.set({ key: val });
+    function syncStorage() {
+        chrome.storage.sync.get([key], (valueMap) => {
+            if (valueMap[key] != null && valueMap[key]) {
+                set(valueMap[key]);
+            }
+        })
+    }
+    
+    subscribe((val) => {
+        if(!firedFirst){
+            syncStorage();
+            firedFirst = true;
+        }
+        else {
+            chrome.storage.sync.set({ [key]: val });
+        }
+    });
+
+    chrome.storage.onChanged.addListener((changes: object, areaName: string) => {
+        const change = changes[key];
+        if(change && !object_equals(change.newValue, change.oldValue)) {
+            set(change.newValue);
+        }
     })
-    return store;
+
+    return { set, update, subscribe };
 }
