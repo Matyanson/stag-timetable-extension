@@ -35,7 +35,8 @@
         background-color: #8e8eff;
     }
     .header.edit {
-        border: 2px solid red;
+        outline: 2px solid red;
+        z-index: 2;
     }
     .number {
         font-size: 1.5rem;

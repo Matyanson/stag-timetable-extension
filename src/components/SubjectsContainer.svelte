@@ -64,6 +64,7 @@ import { subjects } from "../store";
     cursor: pointer;
 }
 .subj.selected {
-    border: 2px red solid;
+    outline: 2px solid red;
+    z-index: 2;
 }
 </style>

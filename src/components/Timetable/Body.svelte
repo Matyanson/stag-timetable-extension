@@ -58,7 +58,8 @@ import { createEventDispatcher } from "svelte";
         cursor: pointer;
     }
     .data:hover {
-        border: 2px solid red;
+        outline: 2px solid red;
+        z-index: 2;
     }
     .cell {
         border-bottom: 1px solid #0000003d;
