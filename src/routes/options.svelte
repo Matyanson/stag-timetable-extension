@@ -14,7 +14,7 @@
     <h1>Timetable collection</h1>
     <TimetableEditor />
     
-    <h1>Schedule collection</h1>
+    <h1>Plans collection</h1>
     <PlansCollection />
     
     <h1>Settings</h1>
